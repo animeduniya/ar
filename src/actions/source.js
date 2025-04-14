@@ -1,11 +1,11 @@
-"use server"
 import { ANIME } from "@consumet/extensions";
 
-const gogo = new ANIME.Gogoanime();
+// Changed Gogoanime to animekai from Consumet
+const animekai = new ANIME.Animekai();
 
-export async function getGogoSources(id) {
+export async function getAnimekaiSources(id) {
     try {
-        const data = await gogo.fetchEpisodeSources(id);
+        const data = await animekai.fetchEpisodeSources(id);
 
         if (!data) return null;
 
@@ -16,7 +16,7 @@ export async function getGogoSources(id) {
     }
 }
 
-export async function getZoroSources(id, provider, episodeid, epnum, subtype) {
+export async function getConsumetZoroSources(id, provider, episodeid, epnum, subtype) {
     try {
         let data;
         const API = process.env.ZORO_API;
@@ -25,7 +25,8 @@ export async function getZoroSources(id, provider, episodeid, epnum, subtype) {
             data = await res.json();
         } else {
             console.log(episodeid)
-            const resp = await fetch(`https://anify.eltik.cc/sources?providerId=${provider}&watchId=${encodeURIComponent(episodeid)}&episodeNumber=${epnum}&id=${id}&subType=${subtype}`);
+            // Changed to Consumet Zoro with the new base URL
+            const resp = await fetch(`https://api-consumet-idk.vercel.app/sources?providerId=${provider}&watchId=${encodeURIComponent(episodeid)}&episodeNumber=${epnum}&id=${id}&subType=${subtype}`);
             data = await resp.json();
         }
         if (!data) return null;
@@ -36,14 +37,15 @@ export async function getZoroSources(id, provider, episodeid, epnum, subtype) {
         return null;
     }
 }
+
 export async function getAnimeSources(id, provider, epid, epnum, subtype) {
     try {
-        if (provider === "gogoanime") {
-            const data = await getGogoSources(epid);
+        if (provider === "animekai") {
+            const data = await getAnimekaiSources(epid);
             return data;
         }
         if (provider === "zoro") {
-            const data = await getZoroSources(id, provider, epid, epnum, subtype)
+            const data = await getConsumetZoroSources(id, provider, epid, epnum, subtype)
             return data;
         }
     } catch (error) {
