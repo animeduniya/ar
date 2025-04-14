@@ -35,19 +35,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
     }, []);
 
     useEffect(() => {
-        // if (subtitles && subtitles.length > 0) {
-        //     const track = new TextTrack({
-        //         kind: 'subtitles',
-        //         default: true,
-        //         label: 'English',
-        //         language: 'en-US',
-        //         type: 'vtt',
-        //         src: subtitles[0]?.url || ''
-        //     });
-
-        //     playerRef.current.textTracks.add(track);
-        // }
-
         playerRef.current?.subscribe(({ currentTime, duration }) => {
 
             if (skiptimes && skiptimes.length > 0) {
@@ -101,7 +88,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
         if (autoNext) {
             getNextEpisode();
         }
-        // console.log("End")
         setIsPlaying(false);
     }
 
@@ -112,12 +98,10 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
     }
 
     function onPlay() {
-        // console.log("play")
         setIsPlaying(true);
     }
 
     function onPause() {
-        // console.log("pause")
         setIsPlaying(false);
     }
 
@@ -142,8 +126,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
                     duration: duration,
                     timeWatched: currentTime,
                     provider: provider,
-                    //   nextId: navigation?.next?.id,
-                    //   nextNumber: navigation?.next?.number,
                     subtype: subtype,
                     createdAt: new Date().toISOString(),
                 });
@@ -166,7 +148,7 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
             if (percentage >= 0.9) {
                 remote.seek(0);
             } else {
-                remote.seek(seekTime-3);
+                remote.seek(seekTime - 3);
             }
         }
     }
@@ -198,7 +180,6 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
             onPlay={onPlay}
             onPause={onPause}
             onLoadedMetadata={onLoadedMetadata}
-        // onTimeUpdate={onTimeUpdate}
         >
             <div className={styles.bigplaycontainer}>
                 <PlayButton className={styles.vdsbutton}>
@@ -208,9 +189,9 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
                 </PlayButton>
             </div>
             <MediaProvider>
-            {subtitles && subtitles?.map((track) => (
-            <Track {...track} key={track.src} />
-          ))}
+                {subtitles && subtitles?.map((track) => (
+                    <Track {...track} key={track.src} />
+                ))}
             </MediaProvider>
             <Gesture className="vds-gesture" event="pointerup" action="toggle:paused" />
             <Gesture className="vds-gesture" event="pointerup" action="toggle:controls" />
@@ -224,4 +205,4 @@ function VidstackPlayer({ data, sources, skiptimes, epid, thumbnails, subtitles,
     )
 }
 
-export default VidstackPlayer
+export default VidstackPlayer;
