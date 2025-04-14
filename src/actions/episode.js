@@ -4,27 +4,28 @@ import { CombineEpisodeMeta } from "@/utils/EpisodeFunctions";
 import { redis } from "@/lib/rediscache";
 import { getMappings } from "./mappings";
 
-const gogo = new ANIME.Gogoanime();
-const zoro = new ANIME.Zoro();
+// Updated to use AnimeKai and Consumet Zoro
+const animekai = new ANIME.AnimeKai({ baseUrl: 'https://api-consumet-idk.vercel.app' });
+const consumetZoro = new ANIME.ConsumetZoro({ baseUrl: 'https://api-consumet-idk.vercel.app' });
 
-export async function fetchGogoEpisodes(id) {
+export async function fetchAnimeKaiEpisodes(id) {
   try {
-    const data = await gogo.fetchAnimeInfo(id);
+    const data = await animekai.fetchAnimeInfo(id);
 
     return data?.episodes || [];
   } catch (error) {
-    console.error("Error fetching gogoanime:", error.message);
+    console.error("Error fetching animekai:", error.message);
     return [];
   }
 }
 
-export async function fetchZoroEpisodes(id) {
+export async function fetchConsumetZoroEpisodes(id) {
   try {
-    const data = await zoro.fetchAnimeInfo(id);
+    const data = await consumetZoro.fetchAnimeInfo(id);
 
     return data?.episodes || [];
   } catch (error) {
-    console.error("Error fetching zoro:", error.message);
+    console.error("Error fetching consumet zoro:", error.message);
     return [];
   }
 }
@@ -37,7 +38,7 @@ async function fetchEpisodeMeta(id, available = false) {
     const res = await fetch(
       `https://api.ani.zip/mappings?anilist_id=${id}`
     );
-const data = await res.json()
+    const data = await res.json();
     const episodesArray = Object.values(data?.episodes);
 
     if (!episodesArray) {
@@ -68,7 +69,7 @@ const fetchAndCacheData = async (id, meta, redis, cacheTime, refresh) => {
         mappings?.gogoanime?.sub ||
         mappings?.gogoanime?.tv
       ) {
-        subEpisodes = await fetchGogoEpisodes(
+        subEpisodes = await fetchAnimeKaiEpisodes(
           mappings?.gogoanime?.uncensored ||
             mappings.gogoanime.sub ||
             mappings?.gogoanime?.tv
@@ -77,13 +78,13 @@ const fetchAndCacheData = async (id, meta, redis, cacheTime, refresh) => {
 
       // Fetch dub episodes if available
       if (mappings?.gogoanime?.dub) {
-        dubEpisodes = await fetchGogoEpisodes(mappings?.gogoanime?.dub);
+        dubEpisodes = await fetchAnimeKaiEpisodes(mappings?.gogoanime?.dub);
       }
 
       if (subEpisodes?.length > 0 || dubEpisodes?.length > 0) {
         allepisodes.push({
           episodes: { sub: subEpisodes, dub: dubEpisodes },
-          providerId: "gogoanime",
+          providerId: "animekai",
           consumet: true,
         });
       }
@@ -97,7 +98,7 @@ const fetchAndCacheData = async (id, meta, redis, cacheTime, refresh) => {
         mappings?.zoro?.sub ||
         mappings?.zoro?.tv
       ) {
-        subEpisodes = await fetchZoroEpisodes(
+        subEpisodes = await fetchConsumetZoroEpisodes(
           mappings?.zoro?.uncensored
             ? mappings?.zoro?.uncensored
             : mappings.zoro.sub
@@ -111,7 +112,7 @@ const fetchAndCacheData = async (id, meta, redis, cacheTime, refresh) => {
       
         allepisodes.push({
           episodes: transformedEpisodes,
-          providerId: "zoro",
+          providerId: "consumetZoro",
         });
       }
     }
@@ -164,14 +165,6 @@ export const getEpisodes = async (id, status, refresh = false) => {
 
   if (redis) {
     try {
-      // // Find keys matching the pattern "meta:*"
-      // const keys = await redis.keys("meta:*");
-
-      // // Delete keys matching the pattern "meta:*"
-      // if (keys.length > 0) {
-      //   await redis.del(keys);
-      //   console.log(`Deleted ${keys.length} keys matching the pattern "meta:*"`);
-      // }
       meta = await redis.get(`meta:${id}`);
       if (JSON.parse(meta)?.length === 0) {
         await redis.del(`meta:${id}`);
@@ -219,7 +212,6 @@ export const getEpisodes = async (id, status, refresh = false) => {
     return fetchdata;
   }
 };
-
 
 function transformEpisodeId(episodeId) {
   const regex = /^([^$]*)\$episode\$([^$]*)/;
