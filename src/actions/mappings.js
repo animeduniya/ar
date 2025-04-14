@@ -1,22 +1,23 @@
-"use server"
 import { redis } from '@/lib/rediscache';
 import { ANIME } from "@consumet/extensions";
-import { AnimeInfoAnilist } from '@/lib/Anilistfunctions'
+import { AnimeInfoAnilist } from '@/lib/Anilistfunctions';
 import { findSimilarTitles } from '@/lib/stringSimilarity';
 
+// Changed Gogoanime to animekai from Consumet
+const animekai = new ANIME.Animekai();
 
-const gogo = new ANIME.Gogoanime();
-const hianime = new ANIME.Zoro();
+// Changed Zoro to Consumet Zoro with the new base URL
+const consumetZoro = new ANIME.Zoro({ baseUrl: "https://api-consumet-idk.vercel.app" });
 
 export async function getMappings(anilistId) {
     const data = await getInfo(anilistId);
-    let gogores, zorores;
+    let animekais, zorores;
     if (!data) {
         return null;
     }
-    gogores = await mapGogo(data?.title);
-    zorores = await mapZoro(data?.title);
-    return { gogoanime: gogores, zoro: zorores, id: data?.id, malId: data?.idMal, title: data?.title.romaji };
+    animekais = await mapAnimekai(data?.title);
+    zorores = await mapConsumetZoro(data?.title);
+    return { animekai: animekais, zoro: zorores, id: data?.id, malId: data?.idMal, title: data?.title.romaji };
 }
 
 async function getInfo(id) {
@@ -45,21 +46,21 @@ async function getInfo(id) {
     }
 }
 
-async function mapGogo(title) {
-    let eng = await gogo.search(title?.english || title?.userPreferred);
-    let rom = await gogo.search(title?.romaji);
+async function mapAnimekai(title) {
+    let eng = await animekai.search(title?.english || title?.userPreferred);
+    let rom = await animekai.search(title?.romaji);
     let english_search = eng?.results || [];
     let romaji_search = rom?.results || [];
     // Combine both results and remove duplicates
     const combined = [...english_search, ...romaji_search];
 
     const uniqueResults = Array.from(new Set(combined.map(item => JSON.stringify(item))))
-    .map(item => JSON.parse(item));
+        .map(item => JSON.parse(item));
 
-    const gogomap = findSimilarTitles(title?.romaji || title?.english || title?.userPreferred, uniqueResults)
-    const gogoanime = {};
+    const animekaimap = findSimilarTitles(title?.romaji || title?.english || title?.userPreferred, uniqueResults);
+    const animekai = {};
 
-    gogomap?.forEach((obj) => {
+    animekaimap?.forEach((obj) => {
         const title = obj.title;
         const id = obj.id;
 
@@ -67,22 +68,22 @@ async function mapGogo(title) {
 
         if (match && (match[1].toLowerCase() === 'uncensored' || match[1].toLowerCase() === 'dub')) {
             const key = match[1].replace(/\s+/g, '-').toLowerCase();
-            if (!gogoanime[key]) {
-                gogoanime[key] = id;
+            if (!animekai[key]) {
+                animekai[key] = id;
             }
         } else {
-            if (!gogoanime['sub']) {
-                gogoanime['sub'] = id;
+            if (!animekai['sub']) {
+                animekai['sub'] = id;
             }
         }
     });
-    return gogoanime;
+    return animekai;
 }
 
-async function mapZoro(title) {
-    let eng = await hianime.search(title?.english || title?.romaji || title?.userPreferred);
-    const zoromap = findSimilarTitles(title?.english, eng?.results)
-    const zoromaprom = findSimilarTitles(title?.romaji, eng?.results)
+async function mapConsumetZoro(title) {
+    let eng = await consumetZoro.search(title?.english || title?.romaji || title?.userPreferred);
+    const zoromap = findSimilarTitles(title?.english, eng?.results);
+    const zoromaprom = findSimilarTitles(title?.romaji, eng?.results);
     const combined = [...zoromap, ...zoromaprom];
 
     const uniqueCombined = combined.reduce((acc, current) => {
