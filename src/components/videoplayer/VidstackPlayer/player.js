@@ -89,7 +89,6 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
   }
 
   function onEnd() {
-    // console.log("End")
     setIsPlaying(false);
   }
 
@@ -103,12 +102,10 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
   }
 
   function onPlay() {
-    // console.log("play")
     setIsPlaying(true);
   }
 
   function onPause() {
-    // console.log("pause")
     setIsPlaying(false);
   }
 
@@ -241,7 +238,7 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
       onEnded={onEnded}
       onCanPlay={onCanPlay}
       src={{
-        src: src,
+        src: `${src}`,
         type: "application/x-mpegurl",
       }}
       onPlay={onPlay}
@@ -283,4 +280,4 @@ function Player({ dataInfo, id, groupedEp, src, session, savedep, subtitles, thu
   )
 }
 
-export default Player
+export default Player;
